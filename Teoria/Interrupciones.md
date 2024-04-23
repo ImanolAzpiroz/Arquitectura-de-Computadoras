@@ -9,8 +9,8 @@ Indice
      * [PIC](#pic) 
      * [EOI (20H)](#eoi_20h)
      * [IMR (21H)](#IMR_21H)
-     * [Vector de Interrupciones](#VECTOR_DE_INTERRUCIONES)
-     * [TIMER](#TIMER)
+     * [Vector de Interrupciones](#vector_de_interrupciones)
+     * [Timer](#timer)
      * [F10](#F10)
    * [Handshake](#handshake)
      * [Por Consulta de Estado](#IMPRIMIR_POR_CONSULTA_DE_ESTADO)
@@ -117,8 +117,13 @@ Pic
 =================
 Los dispositivos interrumpen al cpu a travez del Pic que sirve como intermediario. <br>
 Se configura dentro de las sentencias ```CLI``` y ```STI``` que bloquean y habilitan las interrupciones <br>
+La cpu tiene una sola linea de interrupcion.
+El Pic tiene 8 lineas de entrada:
 
 ![image](https://github.com/ImanolAzpiroz/Arquitectura-de-Computadoras/assets/122705871/2d2cedeb-8bed-4985-aea7-46acd66f2174)
+
+
+
 
 Eoi_(20h)
 =================
@@ -136,6 +141,110 @@ IMR_21H
 - 1 Significa deshabilitada, 0 habilitada
 
 ![image](https://github.com/ImanolAzpiroz/Arquitectura-de-Computadoras/assets/122705871/a9faf931-2a93-438a-b609-27c5f4a19e25)
+
+
+
+Vector_de_Interrupciones
+=================
+
+Ejemplo Configuracion
+```Assembly
+eoi equ 20h
+imr equ 21h
+int0 equ 24h
+ORG 1000H
+    msj db "Hola "
+
+
+ORG 3000H
+saludar: mov bx, offset msj
+    mov al, 5
+    int 7
+
+    ; Aviso al eoi que ya finalizó la int
+    mov al, 20h
+    out eoi, al
+
+    iret
+
+ORG 2000H
+    
+    cli
+        ; Config IMR
+        mov al, 0feh    ; 1111 1110  Habilita el f10
+        out imr, al
+
+        ; eligo ID = 24  y lo envio al registro del pic correspondiente a la int0
+        mov al, 24
+        out int0, al
+
+        ; Muevo a la pos 96 en el vector de int, la direccion de la subrutina.
+        mov bx, 96 ; 24 * 4
+        mov word ptr[bx], saludar
+    sti
+
+    loop: jmp loop
+
+    int 0
+END
+```
+
+Timer
+=================
+Contiene 2 registros, ```Cont``` (Contador)(10h) y ```comp``` (Comparacion)(11h)
+- Cont: Se incrementa una vez por segundo
+- Comp: Cuando Comp = Cont, se dispara la interrupcion.
+
+ ``` Assembly
+ eoi equ 20h
+ imr equ 21h
+ int1 equ 25h
+
+ cont equ 10h
+ comp equ 11h
+
+ORG 1000H
+    msj db "Hola "
+    flag db 0
+
+ORG 80
+Dir_atender db 3100h
+
+ORG 3100H
+atender: mov bx, offset msj
+    mov al, 5
+    int 7
+
+    mov flag, 1
+
+    mov al, 20h
+    out eoi, al
+
+    iret
+ORG 2000h
+    cli
+        mov al, 0fdh   ;1111 1101
+        out imr, al
+
+        mov al, 20
+        out int1, al
+
+        ; Config Timer
+        mov al, 0
+        out cont, al
+
+        mov al, 10
+        out comp, al
+
+
+    sti
+
+    loop: cmp flag, 1
+        jnz loop
+
+    int 0
+END
+ ```
 
 
 Handshake
