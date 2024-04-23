@@ -15,7 +15,7 @@ Indice
    * [Handshake](#handshake)
      * [Por Consulta de Estado](#IMPRIMIR_POR_CONSULTA_DE_ESTADO)
      * [Por interrupción](#IMPRIMIR_POR_INTERRUPCION)
-   * [Impresora por PIO](#Impresora_Por_Pio)
+   * [Impresora por PIO](#impresora_por_pio)
 
 Interrupciones_por_Software
 ===========================
@@ -208,7 +208,7 @@ ORG 1000H
     flag db 0
 
 ORG 80
-Dir_atender db 3100h
+Dir_atender dw 3100h
 
 ORG 3100H
 atender: mov bx, offset msj
@@ -277,16 +277,123 @@ END
 
 ```Assembly
 
-ORG 1000H
-    car db "a"
-ORG 2000H
+hs_dato equ 40h
+hs_estado equ 41h
+
+
+
+org 1000h
+  msj db "Hs con polling "
+  fin db ?
+  
+org 2000h
+  ; Configurar int por polling
+  in al, hs_estado
+  and al, 01111111b
+  out hs_estado, al
+  
+  mov bx, offset msj
+  poll: in al, hs_estado
+    and al, 1
+    jnz poll
+
+    mov al, [bx]
+    out hs_dato, al
+
+    inc bx
+    cmp bx, offset fin
+    jnz poll
+    
+  int 0
+end
+```
+
+<h3> Imprimir con Interrupciones </h3>
+
+``` Assembly
+dato equ 40h
+estado equ 41h
+
+org 1000h
+    car db "A"
+
+org 3000h
+imp: mov al, car
+    out dato, al
+
+    mov al 0ffh
+    out imr, al
+
+    mov al, 20h
+    out eoi, al
+    iret
+
+org 2000h
+    mov cl, 9
+    mov bx, offset msj
+
     loop: in al, estado
-        and al, 000000001
-        cmp al, 1
-        jnz loop    ; Mientras el bit Busy sea igual a 1 seguir loopeando (Imp ocupada)
-    mov al, car
-    out dato, al    ; Imprime
-    int 0
-END
+        and al, 1
+        jnz loop
+
+        mov al, [bx]
+        out dato, al
+        inc bx
+        dec cl
+        jnz loop
+    int0
+end 
+```
+
+Impresora_por_Pio
+==========
+
+``` Assembly
+pa equ 30h
+pb equ 31h
+ca equ 32h
+cb equ 33h
+
+org 1000h
+  msj db "Impresora por pio"
+  fin db ?
+
+org 2000h
+  ; Config pio 
+  ; Strobe como entrada
+   mov al, 11111101b
+   out ca, al
+
+  ; CB como salida
+  mov al, 0
+  out cb, al
+
+  ; Recorremos el string
+  mov bx, offset msj
+  loop: in al, pa
+  and al, 1
+  jnz loop
+
+  ; Imprimi caracter
+  mov al, [bx]
+  out pb, al
+
+  
+  in al, pa
+  or al, 2   ; Fuerzo strobe a 1
+  out pa, al
+
+  in al, pa
+  and al, 0fdh   ; Fuerzo el strobe en 0
+  out pa, al
+
+  ; Sig bit
+  inc bx
+  cmp bx, offset fin
+  jnz loop
+
+  
+  int 0
+end
 ```
 
