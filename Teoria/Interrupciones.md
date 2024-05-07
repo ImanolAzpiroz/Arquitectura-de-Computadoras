@@ -252,10 +252,115 @@ Handshake
 Dispositivo interno de E/S <br>
 Diseñado especifiamenter para la impresora centronics del simulador <br>
 Envia señal de Strobe automaticamente
-Nos Interrumpe a travez del Pic
+Nos Interrumpe a travez del Pic <br>
 
 Conectado a impresora por 2 registros
 ![image](https://github.com/ImanolAzpiroz/Arquitectura-de-Computadoras/assets/122705871/9e0ae6b7-c707-4674-a25a-b92782649780)
+
+<h3> 2 formas </h3> 
+
+    - Consulta de estado (Polling)
+    - Por Interrupcion
+
+<table>
+<tr><td>Por Polling</td> <td>Por Interrupcion</td></tr>
+<tr>
+<td>
+
+``` Assembly
+dato equ 40h
+estado equ 41h
+
+org 1000h
+    msj db "Algo"
+    fin db ?
+org 2000h
+    ; Configuro bit de int por consulta de estado
+    in al, estado
+    and al, 01111111b
+    out estado, al
+
+    ; Loop de Polling
+    mov bx, offset msj
+    poll: in al, estado
+        and al, 1
+        jnz poll
+
+        ; Imprimir
+        mov al, [bx]
+        out dato, al
+        inc bx
+        cmp bx, offset fin
+        jnz pool
+    int 0 
+end
+```
+</td>
+<td>
+
+``` Assembly
+eoi equ 20h
+imr equ 21h
+int2 equ 26h
+dato equ 40h
+estado equ 41h
+
+org 1000h
+    msj db "Algo"
+    fin db ?
+
+org 3000h
+    imprimir: push ax  ; Salvo el valor de ax
+    mov al, [bx]
+    out dato, al
+    inc bx
+    
+    ; Aviso a eoi que termino la int
+    mov al, 20h
+    out eoi, al
+
+    pop ax  
+    iret
+
+org 2000h
+    ; Ponemos la direccion de la interrupcion en 36
+    mov ax, imprimir
+    mov bx, 36   ; 9 * 4 = 36 
+    mov [bx], ax
+    ; Otra opcion [org 36, sub_dir dw 3000h]
+
+    ;Configuro el Pic
+    cli
+        mov al, 11111011b
+        out imr, al
+
+        mov al, 9
+        out int2, al
+    sti
+    mov bx, offset msj
+
+    ; config Hs por interrupcion
+    in al, estado
+    or al, 10000000b
+    out estado, al
+
+    ; Otro programa
+    poll: cmp bx, offset fin
+    jnz poll
+
+    ; desactivo hs por interrupcion
+    in al, estado
+    and al, 01111111b
+    out estado, al
+
+    int 0
+end
+```
+
+</td>
+<t/r>
+</table>
+
 
 
 <h3>Imprimir Un Caracter</h3>
@@ -344,6 +449,22 @@ org 2000h
     int0
 end 
 ```
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
 
 Impresora_por_Pio
 ==========
