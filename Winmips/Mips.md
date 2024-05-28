@@ -126,5 +126,24 @@ DADDI R1, R0, 5  ;
 SD R1, A (R0)
 ```
 
-## Atascos y Dependencia de control
+## Forwarding
+![image](https://github.com/ImanolAzpiroz/Arquitectura-de-Computadoras/assets/122705871/1b4cc8bc-a07f-4740-99a8-ad0845b134b4)
+
+Guarda en unos Buffer el resultado de la operacion anterior, para que los mismos se puedan usar en la siguiente instruccion sin necesidad de esperar a la etapa de WriteBack.
+
+## Saltos
+- Condicionales: Salta dependiendo de que se cumpla una condicion.
+- Incondicionales: Salta siempre. 
 En la etapa ID se calcula el salto.
+
+
+Condicional:
+``` mips
+loop: DADDI r2, r2, -1
+BNEZ r2, loop
+DADDI r7, r0, r1
+```
+
+## Atasco por dependencia de control
+Branch Taken Stall
+Salto que se deberia haber hecho y no se ejecuto.
