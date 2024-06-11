@@ -1,1 +1,1 @@
-D:\(ALL) Estudios\Facultad\Repositorio Facultad Informatica\Arquitectura-de-Computadoras\Winmips\Practica\Practica 6\Pantalla.s
+C:\Users\Usuario\Desktop\(All) Ima\Github\Repositorio Facultad\Arquitectura-de-Computadoras\Winmips\Practica\Practica 6\LeerChar.s
