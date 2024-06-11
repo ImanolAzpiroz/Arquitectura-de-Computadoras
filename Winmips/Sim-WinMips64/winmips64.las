@@ -1,0 +1,1 @@
+D:\(ALL) Estudios\Facultad\Repositorio Facultad Informatica\Arquitectura-de-Computadoras\Winmips\Practica\Practica 6\Pantalla.s

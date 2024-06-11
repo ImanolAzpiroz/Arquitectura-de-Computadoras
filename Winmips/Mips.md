@@ -144,6 +144,13 @@ BNEZ r2, loop
 DADDI r7, r0, r1
 ```
 
-## Atasco por dependencia de control
+
+
+## Atascos por dependencia de datos Raw
+
+
+
+
+## Atascos por dependencia de control
 Branch Taken Stall
 Salto que se deberia haber hecho y no se ejecuto.
